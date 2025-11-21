@@ -36,6 +36,12 @@ PubSubClient client(espClient);
 bool wifiOK = false;
 bool mqttOK = false;
 
+// timing variables for non-blocking delay
+unsigned long lastSensorRead = 0;
+const unsigned long SENSOR_INTERVAL = 3000; // 3 seconds between readings
+
+// MQTT buffer size for temperature/humidity strings
+const int MQTT_VALUE_BUFFER_SIZE = 12; // Sufficient for dtostrf output (max 8 chars + null + margin)
 // reconnection backoff
 unsigned long lastWiFiReconnectAttempt = 0;
 const unsigned long WIFI_RECONNECT_INTERVAL = 30000; // 30 seconds between reconnection attempts
@@ -135,6 +141,14 @@ void loop() {
 
   client.loop();
 
+  // Non-blocking delay: only read sensor every SENSOR_INTERVAL milliseconds
+  // Note: millis() overflow (every ~49 days) is handled correctly by unsigned arithmetic
+  unsigned long currentMillis = millis();
+  if (lastSensorRead != 0 && currentMillis - lastSensorRead < SENSOR_INTERVAL) {
+    return; // Skip sensor reading and LCD update this iteration
+  }
+  lastSensorRead = currentMillis;
+
   float temp = dht.readTemperature();
   float hum  = dht.readHumidity();
 
@@ -188,6 +202,4 @@ void loop() {
       client.publish(TOPIC_HUM, hStr);
     }
   }
-
-  delay(3000);
 }
