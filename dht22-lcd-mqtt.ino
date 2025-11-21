@@ -130,23 +130,27 @@ void loop() {
   float temp = dht.readTemperature();
   float hum  = dht.readHumidity();
 
-  lcd.clear();
+  // lcd.clear(); // Removed to prevent flickering and reduce LCD wear
 
   // -------------------------
   // Line 1 - Temperature
   // -------------------------
   lcd.setCursor(0, 0);
   lcd.print("T: ");
-  lcd.print(temp, 2);
+  char tempStr[7];
+  dtostrf(temp, 5, 2, tempStr); // 5 chars wide, 2 decimals
+  lcd.print(tempStr);
   lcd.print((char)223);
-  lcd.print("C");
+  lcd.print("C ");
 
   // -------------------------
   // Line 2 - Humidity + status
   // -------------------------
   lcd.setCursor(0, 1);
   lcd.print("H: ");
-  lcd.print(hum, 2);
+  char humStr[7];
+  dtostrf(hum, 5, 2, humStr); // 5 chars wide, 2 decimals
+  lcd.print(humStr);
   lcd.print("% ");
 
   // WiFi Status
