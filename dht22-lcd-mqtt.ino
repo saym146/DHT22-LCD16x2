@@ -6,13 +6,7 @@
 // -------------------------
 // WIFI + MQTT SETTINGS
 // -------------------------
-const char* WIFI_SSID     = "SSID";
-const char* WIFI_PASSWORD = "******";
-
-const char* MQTT_SERVER   = "IP/domain";
-const uint16_t MQTT_PORT     = PORT;
-const char* MQTT_USER     = "USER";
-const char* MQTT_PASS     = "PASS";
+#include "config.h"
 
 const char* TOPIC_TEMP = "home/room1/temperature";
 const char* TOPIC_HUM  = "home/room1/humidity";
