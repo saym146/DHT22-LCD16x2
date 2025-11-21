@@ -6,16 +6,15 @@
 // -------------------------
 // WIFI + MQTT SETTINGS
 // -------------------------
-const char* WIFI_SSID     = "SSID";
-const char* WIFI_PASSWORD = "******";
-
-const char* MQTT_SERVER   = "IP/domain";
-const uint16_t MQTT_PORT     = PORT;
-const char* MQTT_USER     = "USER";
-const char* MQTT_PASS     = "PASS";
+#include "config.h"
 
 const char* TOPIC_TEMP = "home/room1/temperature";
 const char* TOPIC_HUM  = "home/room1/humidity";
+
+// Buffer and formatting constants for dtostrf
+#define TEMP_BUFFER_SIZE 10
+#define TEMP_WIDTH 4
+#define TEMP_PRECISION 2
 
 // -------------------------
 // DHT22 CONFIG
@@ -43,6 +42,9 @@ const unsigned long SENSOR_INTERVAL = 3000; // 3 seconds between readings
 
 // MQTT buffer size for temperature/humidity strings
 const int MQTT_VALUE_BUFFER_SIZE = 12; // Sufficient for dtostrf output (max 8 chars + null + margin)
+// reconnection backoff
+unsigned long lastWiFiReconnectAttempt = 0;
+const unsigned long WIFI_RECONNECT_INTERVAL = 30000; // 30 seconds between reconnection attempts
 
 // -------------------------
 // Tick & Cross CUSTOM CHARS
@@ -114,12 +116,17 @@ void setup() {
 // -------------------------
 void loop() {
 
-  // reconnect attempts (SAFE, no blocking)
+  // reconnect attempts with backoff strategy (SAFE, no blocking)
   if (WiFi.status() == WL_CONNECTED) {
     wifiOK = true;
   } else {
     wifiOK = false;
-    setupWiFiSafe();
+    // Only attempt reconnection if enough time has passed since last attempt
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastWiFiReconnectAttempt >= WIFI_RECONNECT_INTERVAL) {
+      lastWiFiReconnectAttempt = currentMillis;
+      setupWiFiSafe();
+    }
   }
 
   if (wifiOK) {
@@ -147,47 +154,52 @@ void loop() {
 
   // lcd.clear(); // Removed to prevent flickering and reduce LCD wear
 
-  // -------------------------
-  // Line 1 - Temperature
-  // -------------------------
-  lcd.setCursor(0, 0);
-  lcd.print("T: ");
-  char tempStr[7];
-  dtostrf(temp, 5, 2, tempStr); // 5 chars wide, 2 decimals
-  lcd.print(tempStr);
-  lcd.print((char)223);
-  lcd.print("C ");
+  // Validate sensor readings
+  if (isnan(temp) || isnan(hum)) {
+    // Display error message when sensor fails
+    lcd.setCursor(0, 0);
+    lcd.print("Sensor Error!");
+    lcd.setCursor(0, 1);
+    lcd.print("Check DHT22");
+  } else {
+    // -------------------------
+    // Line 1 - Temperature
+    // -------------------------
+    lcd.setCursor(0, 0);
+    lcd.print("T: ");
+    lcd.print(temp, 2);
+    lcd.print((char)223);
+    lcd.print("C");
 
-  // -------------------------
-  // Line 2 - Humidity + status
-  // -------------------------
-  lcd.setCursor(0, 1);
-  lcd.print("H: ");
-  char humStr[7];
-  dtostrf(hum, 5, 2, humStr); // 5 chars wide, 2 decimals
-  lcd.print(humStr);
-  lcd.print("% ");
+    // -------------------------
+    // Line 2 - Humidity + status
+    // -------------------------
+    lcd.setCursor(0, 1);
+    lcd.print("H: ");
+    lcd.print(hum, 2);
+    lcd.print("% ");
 
-  // WiFi Status
-  lcd.setCursor(10, 1);
-  lcd.print("W:");
-  lcd.write(wifiOK ? 0 : 1);
+    // WiFi Status
+    lcd.setCursor(10, 1);
+    lcd.print("W:");
+    lcd.write(wifiOK ? 0 : 1);
 
-  // MQTT Status
-  lcd.setCursor(13, 1);
-  lcd.print("M:");
-  lcd.write(mqttOK ? 0 : 1);
+    // MQTT Status
+    lcd.setCursor(13, 1);
+    lcd.print("M:");
+    lcd.write(mqttOK ? 0 : 1);
 
-  // -------------------------
-  // MQTT publishing IF AVAILABLE ONLY
-  // -------------------------
-  if (wifiOK && mqttOK) {
-    char tStr[MQTT_VALUE_BUFFER_SIZE];
-    char hStr[MQTT_VALUE_BUFFER_SIZE];
-    dtostrf(temp, 5, 2, tStr);
-    dtostrf(hum, 5, 2, hStr);
+    // -------------------------
+    // MQTT publishing IF AVAILABLE ONLY
+    // -------------------------
+    if (wifiOK && mqttOK) {
+      char tStr[TEMP_BUFFER_SIZE];
+      char hStr[TEMP_BUFFER_SIZE];
+      dtostrf(temp, TEMP_WIDTH, TEMP_PRECISION, tStr);
+      dtostrf(hum, TEMP_WIDTH, TEMP_PRECISION, hStr);
 
-    client.publish(TOPIC_TEMP, tStr);
-    client.publish(TOPIC_HUM, hStr);
+      client.publish(TOPIC_TEMP, tStr);
+      client.publish(TOPIC_HUM, hStr);
+    }
   }
 }
