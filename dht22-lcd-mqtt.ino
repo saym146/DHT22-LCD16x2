@@ -12,7 +12,6 @@ const char* TOPIC_TEMP = "home/room1/temperature";
 const char* TOPIC_HUM  = "home/room1/humidity";
 
 // Buffer and formatting constants for dtostrf
-#define TEMP_BUFFER_SIZE 10
 #define TEMP_WIDTH 4
 #define TEMP_PRECISION 2
 
@@ -193,8 +192,8 @@ void loop() {
     // MQTT publishing IF AVAILABLE ONLY
     // -------------------------
     if (wifiOK && mqttOK) {
-      char tStr[TEMP_BUFFER_SIZE];
-      char hStr[TEMP_BUFFER_SIZE];
+      char tStr[MQTT_VALUE_BUFFER_SIZE];
+      char hStr[MQTT_VALUE_BUFFER_SIZE];
       dtostrf(temp, TEMP_WIDTH, TEMP_PRECISION, tStr);
       dtostrf(hum, TEMP_WIDTH, TEMP_PRECISION, hStr);
 
