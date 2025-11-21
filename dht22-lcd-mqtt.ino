@@ -37,6 +37,10 @@ PubSubClient client(espClient);
 bool wifiOK = false;
 bool mqttOK = false;
 
+// timing variables for non-blocking delay
+unsigned long lastSensorRead = 0;
+const unsigned long SENSOR_INTERVAL = 3000; // 3 seconds between readings
+
 // -------------------------
 // Tick & Cross CUSTOM CHARS
 // -------------------------
@@ -127,6 +131,13 @@ void loop() {
 
   client.loop();
 
+  // Non-blocking delay: only read sensor every SENSOR_INTERVAL milliseconds
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastSensorRead < SENSOR_INTERVAL) {
+    return; // Skip sensor reading and LCD update this iteration
+  }
+  lastSensorRead = currentMillis;
+
   float temp = dht.readTemperature();
   float hum  = dht.readHumidity();
 
@@ -167,14 +178,12 @@ void loop() {
   // MQTT publishing IF AVAILABLE ONLY
   // -------------------------
   if (wifiOK && mqttOK) {
-    char tStr[TEMP_BUFFER_SIZE];
-    char hStr[TEMP_BUFFER_SIZE];
-    dtostrf(temp, TEMP_WIDTH, TEMP_PRECISION, tStr);
-    dtostrf(hum, TEMP_WIDTH, TEMP_PRECISION, hStr);
+    char tStr[10];
+    char hStr[10];
+    dtostrf(temp, 5, 2, tStr);
+    dtostrf(hum, 5, 2, hStr);
 
     client.publish(TOPIC_TEMP, tStr);
     client.publish(TOPIC_HUM, hStr);
   }
-
-  delay(3000);
 }
