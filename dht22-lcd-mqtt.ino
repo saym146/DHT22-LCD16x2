@@ -17,6 +17,11 @@ const char* MQTT_PASS     = "PASS";
 const char* TOPIC_TEMP = "home/room1/temperature";
 const char* TOPIC_HUM  = "home/room1/humidity";
 
+// Buffer and formatting constants for dtostrf
+#define TEMP_BUFFER_SIZE 10
+#define TEMP_WIDTH 4
+#define TEMP_PRECISION 2
+
 // -------------------------
 // DHT22 CONFIG
 // -------------------------
@@ -132,44 +137,53 @@ void loop() {
 
   lcd.clear();
 
-  // -------------------------
-  // Line 1 - Temperature
-  // -------------------------
-  lcd.setCursor(0, 0);
-  lcd.print("T: ");
-  lcd.print(temp, 2);
-  lcd.print((char)223);
-  lcd.print("C");
+  // Validate sensor readings
+  if (isnan(temp) || isnan(hum)) {
+    // Display error message when sensor fails
+    lcd.setCursor(0, 0);
+    lcd.print("Sensor Error!");
+    lcd.setCursor(0, 1);
+    lcd.print("Check DHT22");
+  } else {
+    // -------------------------
+    // Line 1 - Temperature
+    // -------------------------
+    lcd.setCursor(0, 0);
+    lcd.print("T: ");
+    lcd.print(temp, 2);
+    lcd.print((char)223);
+    lcd.print("C");
 
-  // -------------------------
-  // Line 2 - Humidity + status
-  // -------------------------
-  lcd.setCursor(0, 1);
-  lcd.print("H: ");
-  lcd.print(hum, 2);
-  lcd.print("% ");
+    // -------------------------
+    // Line 2 - Humidity + status
+    // -------------------------
+    lcd.setCursor(0, 1);
+    lcd.print("H: ");
+    lcd.print(hum, 2);
+    lcd.print("% ");
 
-  // WiFi Status
-  lcd.setCursor(10, 1);
-  lcd.print("W:");
-  lcd.write(wifiOK ? 0 : 1);
+    // WiFi Status
+    lcd.setCursor(10, 1);
+    lcd.print("W:");
+    lcd.write(wifiOK ? 0 : 1);
 
-  // MQTT Status
-  lcd.setCursor(13, 1);
-  lcd.print("M:");
-  lcd.write(mqttOK ? 0 : 1);
+    // MQTT Status
+    lcd.setCursor(13, 1);
+    lcd.print("M:");
+    lcd.write(mqttOK ? 0 : 1);
 
-  // -------------------------
-  // MQTT publishing IF AVAILABLE ONLY
-  // -------------------------
-  if (wifiOK && mqttOK) {
-    char tStr[TEMP_BUFFER_SIZE];
-    char hStr[TEMP_BUFFER_SIZE];
-    dtostrf(temp, TEMP_WIDTH, TEMP_PRECISION, tStr);
-    dtostrf(hum, TEMP_WIDTH, TEMP_PRECISION, hStr);
+    // -------------------------
+    // MQTT publishing IF AVAILABLE ONLY
+    // -------------------------
+    if (wifiOK && mqttOK) {
+      char tStr[TEMP_BUFFER_SIZE];
+      char hStr[TEMP_BUFFER_SIZE];
+      dtostrf(temp, TEMP_WIDTH, TEMP_PRECISION, tStr);
+      dtostrf(hum, TEMP_WIDTH, TEMP_PRECISION, hStr);
 
-    client.publish(TOPIC_TEMP, tStr);
-    client.publish(TOPIC_HUM, hStr);
+      client.publish(TOPIC_TEMP, tStr);
+      client.publish(TOPIC_HUM, hStr);
+    }
   }
 
   delay(3000);
