@@ -163,10 +163,10 @@ void loop() {
   // MQTT publishing IF AVAILABLE ONLY
   // -------------------------
   if (wifiOK && mqttOK) {
-    char tStr[10];
-    char hStr[10];
-    dtostrf(temp, 4, 2, tStr);
-    dtostrf(hum, 4, 2, hStr);
+    char tStr[TEMP_BUFFER_SIZE];
+    char hStr[TEMP_BUFFER_SIZE];
+    dtostrf(temp, TEMP_WIDTH, TEMP_PRECISION, tStr);
+    dtostrf(hum, TEMP_WIDTH, TEMP_PRECISION, hStr);
 
     client.publish(TOPIC_TEMP, tStr);
     client.publish(TOPIC_HUM, hStr);
