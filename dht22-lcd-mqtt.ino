@@ -41,6 +41,9 @@ bool mqttOK = false;
 unsigned long lastSensorRead = 0;
 const unsigned long SENSOR_INTERVAL = 3000; // 3 seconds between readings
 
+// MQTT buffer size for temperature/humidity strings
+const int MQTT_VALUE_BUFFER_SIZE = 10; // Sufficient for format: "-XXX.XX\0"
+
 // -------------------------
 // Tick & Cross CUSTOM CHARS
 // -------------------------
@@ -132,6 +135,7 @@ void loop() {
   client.loop();
 
   // Non-blocking delay: only read sensor every SENSOR_INTERVAL milliseconds
+  // Note: millis() overflow (every ~49 days) is handled correctly by unsigned arithmetic
   unsigned long currentMillis = millis();
   if (currentMillis - lastSensorRead < SENSOR_INTERVAL) {
     return; // Skip sensor reading and LCD update this iteration
@@ -178,8 +182,8 @@ void loop() {
   // MQTT publishing IF AVAILABLE ONLY
   // -------------------------
   if (wifiOK && mqttOK) {
-    char tStr[10];
-    char hStr[10];
+    char tStr[MQTT_VALUE_BUFFER_SIZE];
+    char hStr[MQTT_VALUE_BUFFER_SIZE];
     dtostrf(temp, 5, 2, tStr);
     dtostrf(hum, 5, 2, hStr);
 
