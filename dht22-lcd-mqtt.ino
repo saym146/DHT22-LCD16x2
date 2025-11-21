@@ -6,13 +6,7 @@
 // -------------------------
 // WIFI + MQTT SETTINGS
 // -------------------------
-const char* WIFI_SSID     = "SSID";
-const char* WIFI_PASSWORD = "******";
-
-const char* MQTT_SERVER   = "IP/domain";
-const uint16_t MQTT_PORT     = PORT;
-const char* MQTT_USER     = "USER";
-const char* MQTT_PASS     = "PASS";
+#include "config.h"
 
 const char* TOPIC_TEMP = "home/room1/temperature";
 const char* TOPIC_HUM  = "home/room1/humidity";
@@ -41,6 +35,10 @@ PubSubClient client(espClient);
 // status variables
 bool wifiOK = false;
 bool mqttOK = false;
+
+// reconnection backoff
+unsigned long lastWiFiReconnectAttempt = 0;
+const unsigned long WIFI_RECONNECT_INTERVAL = 30000; // 30 seconds between reconnection attempts
 
 // -------------------------
 // Tick & Cross CUSTOM CHARS
@@ -112,12 +110,17 @@ void setup() {
 // -------------------------
 void loop() {
 
-  // reconnect attempts (SAFE, no blocking)
+  // reconnect attempts with backoff strategy (SAFE, no blocking)
   if (WiFi.status() == WL_CONNECTED) {
     wifiOK = true;
   } else {
     wifiOK = false;
-    setupWiFiSafe();
+    // Only attempt reconnection if enough time has passed since last attempt
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastWiFiReconnectAttempt >= WIFI_RECONNECT_INTERVAL) {
+      lastWiFiReconnectAttempt = currentMillis;
+      setupWiFiSafe();
+    }
   }
 
   if (wifiOK) {
@@ -135,7 +138,7 @@ void loop() {
   float temp = dht.readTemperature();
   float hum  = dht.readHumidity();
 
-  lcd.clear();
+  // lcd.clear(); // Removed to prevent flickering and reduce LCD wear
 
   // Validate sensor readings
   if (isnan(temp) || isnan(hum)) {
