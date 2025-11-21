@@ -42,7 +42,7 @@ unsigned long lastSensorRead = 0;
 const unsigned long SENSOR_INTERVAL = 3000; // 3 seconds between readings
 
 // MQTT buffer size for temperature/humidity strings
-const int MQTT_VALUE_BUFFER_SIZE = 12; // Safe for dtostrf format with width=5, precision=2
+const int MQTT_VALUE_BUFFER_SIZE = 12; // Sufficient for dtostrf output (max 8 chars + null + margin)
 
 // -------------------------
 // Tick & Cross CUSTOM CHARS
