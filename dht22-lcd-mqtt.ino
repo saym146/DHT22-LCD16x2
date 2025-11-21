@@ -37,6 +37,10 @@ PubSubClient client(espClient);
 bool wifiOK = false;
 bool mqttOK = false;
 
+// reconnection backoff
+unsigned long lastWiFiReconnectAttempt = 0;
+const unsigned long WIFI_RECONNECT_INTERVAL = 30000; // 30 seconds between reconnection attempts
+
 // -------------------------
 // Tick & Cross CUSTOM CHARS
 // -------------------------
@@ -107,12 +111,17 @@ void setup() {
 // -------------------------
 void loop() {
 
-  // reconnect attempts (SAFE, no blocking)
+  // reconnect attempts with backoff strategy (SAFE, no blocking)
   if (WiFi.status() == WL_CONNECTED) {
     wifiOK = true;
   } else {
     wifiOK = false;
-    setupWiFiSafe();
+    // Only attempt reconnection if enough time has passed since last attempt
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastWiFiReconnectAttempt >= WIFI_RECONNECT_INTERVAL) {
+      lastWiFiReconnectAttempt = currentMillis;
+      setupWiFiSafe();
+    }
   }
 
   if (wifiOK) {
