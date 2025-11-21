@@ -42,7 +42,7 @@ unsigned long lastSensorRead = 0;
 const unsigned long SENSOR_INTERVAL = 3000; // 3 seconds between readings
 
 // MQTT buffer size for temperature/humidity strings
-const int MQTT_VALUE_BUFFER_SIZE = 10; // Sufficient for format: "-XXX.XX\0"
+const int MQTT_VALUE_BUFFER_SIZE = 12; // Safe for dtostrf format with width=5, precision=2
 
 // -------------------------
 // Tick & Cross CUSTOM CHARS
@@ -137,7 +137,7 @@ void loop() {
   // Non-blocking delay: only read sensor every SENSOR_INTERVAL milliseconds
   // Note: millis() overflow (every ~49 days) is handled correctly by unsigned arithmetic
   unsigned long currentMillis = millis();
-  if (currentMillis - lastSensorRead < SENSOR_INTERVAL) {
+  if (lastSensorRead != 0 && currentMillis - lastSensorRead < SENSOR_INTERVAL) {
     return; // Skip sensor reading and LCD update this iteration
   }
   lastSensorRead = currentMillis;
