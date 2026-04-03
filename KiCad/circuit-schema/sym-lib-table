@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "project-symbols")(type "KiCad")(uri "C:/Kajer/Projects/IoT/dht22-lcd/DHT22-LCD16x2/KiCad/circuit-schema/project-symbols.kicad_sym")(options "")(descr ""))
+)

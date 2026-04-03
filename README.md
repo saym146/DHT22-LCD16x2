@@ -35,27 +35,6 @@ graph LR
     end
 ```
 
-```
-┌──────────┐    GPIO10     ┌──────────────┐   D1–D6    ┌───────────┐
-│  DHT22   │──────────────▶│   ESP8266    │───────────▶│ LCD 16x2  │
-│  Sensor  │   (data)      │  (NodeMCU)   │  (4-bit)   │ (HD44780) │
-└──────────┘               └──────┬───────┘            └───────────┘
-                                  │
-                                  │ Wi-Fi (802.11)
-                                  ▼
-                           ┌──────────────┐
-                           │  Wi-Fi AP /  │
-                           │   Router     │
-                           └──────┬───────┘
-                                  │
-                                  │ TCP port 1883
-                                  ▼
-                           ┌──────────────┐
-                           │    MQTT      │
-                           │   Broker     │
-                           └──────────────┘
-```
-
 ## Features
 
 - Real-time temperature (°C) and humidity (%) display on a 16x2 LCD
