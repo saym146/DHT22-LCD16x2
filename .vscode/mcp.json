@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "kicad": {
+      "type": "stdio",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "C:\\Kajer\\Projects\\mcp-servers\\kicad\\KiCAD-MCP-Server\\dist\\index.js"
+      ],
+      "env": {
+        "KICAD_PYTHON": "C:\\Program Files\\KiCad\\10.0\\bin\\python.exe",
+        "PYTHONPATH": "C:\\Program Files\\KiCad\\10.0\\bin\\Lib\\site-packages"
+      }
+    }
+  }
+}
